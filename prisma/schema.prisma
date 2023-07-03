@@ -29,3 +29,26 @@ model User {
 
   @@map("users")
 }
+
+model Movie {
+  id                   Int      @id @default(autoincrement())
+  adult                Boolean  @default(false)
+  imdb_id              String?
+  original_language    String
+  original_title       String?
+  overview             String
+  popularity           Float
+  poster_path          String
+  production_companies Json?
+  production_countries Json?
+  release_date         DateTime
+  runtime              Int
+  spoken_languages     Json?
+  status               String
+  tagline              String?
+  title                String
+  vote_average         Float
+  vote_count           Int
+
+  @@map("movies")
+}
