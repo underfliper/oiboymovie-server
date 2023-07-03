@@ -31,8 +31,8 @@ model User {
 }
 
 model Movie {
-  id                   Int      @id @default(autoincrement())
-  adult                Boolean  @default(false)
+  id                   Int              @id @default(autoincrement())
+  adult                Boolean          @default(false)
   imdb_id              String?
   original_language    String
   original_title       String?
@@ -49,6 +49,25 @@ model Movie {
   title                String
   vote_average         Float
   vote_count           Int
+  genres               MoviesOnGenres[]
 
   @@map("movies")
+}
+
+model Genre {
+  id     Int              @id @default(autoincrement())
+  key    String
+  name   String
+  movies MoviesOnGenres[]
+
+  @@map("genres")
+}
+
+model MoviesOnGenres {
+  movie   Movie @relation(fields: [movieId], references: [id])
+  movieId Int
+  genre   Genre @relation(fields: [genreId], references: [id])
+  genreId Int
+
+  @@id([movieId, genreId])
 }
