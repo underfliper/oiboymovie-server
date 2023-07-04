@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { GenreModule } from './genre/genre.module';
+import { MovieModule } from './movie/movie.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { GenreModule } from './genre/genre.module';
     PrismaModule,
     AuthModule,
     UserModule,
+    MovieModule,
     GenreModule,
   ],
 })
