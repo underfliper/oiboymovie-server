@@ -1,11 +1,11 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon from 'argon2';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
-import { AuthDto, RegisterDto } from './dto';
+import { AuthDto, ChangePasswordDto, RegisterDto } from './dto';
 import { JwtPayload, Tokens } from './types';
 
 @Injectable()
@@ -74,6 +74,29 @@ export class AuthService {
         refreshToken: null,
       },
     });
+    return true;
+  }
+
+  async changePassword(
+    userId: number,
+    dto: ChangePasswordDto,
+  ): Promise<boolean> {
+    if (dto.new !== dto.confirm)
+      throw new ForbiddenException('Passwords don`t match.');
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new ForbiddenException('Access Denied');
+
+    const passwordMatch = await argon.verify(user.password, dto.old);
+    if (!passwordMatch) throw new ForbiddenException('Old password is wrong.');
+
+    const hashedPassword = await argon.hash(dto.new);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
     return true;
   }
 

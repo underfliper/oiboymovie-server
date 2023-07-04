@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 
 import { AuthService } from './auth.service';
-import { AuthDto, RegisterDto } from './dto';
+import { AuthDto, ChangePasswordDto, RegisterDto } from './dto';
 import { Tokens } from './types';
 import { GetCurrentUser } from '../common/decorators';
 import { AtGuard, RtGuard } from '../common/guards';
@@ -19,27 +19,36 @@ export class AuthController {
 
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
-  signup(@Body() dto: RegisterDto): Promise<Tokens> {
+  async signup(@Body() dto: RegisterDto): Promise<Tokens> {
     return this.authService.signup(dto);
   }
 
   @Post('signin')
   @HttpCode(HttpStatus.OK)
-  signin(@Body() dto: AuthDto): Promise<Tokens> {
+  async signin(@Body() dto: AuthDto): Promise<Tokens> {
     return this.authService.signin(dto);
   }
 
   @UseGuards(AtGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout(@GetCurrentUser('id') userId: number): Promise<boolean> {
+  async logout(@GetCurrentUser('id') userId: number): Promise<boolean> {
     return this.authService.logout(userId);
+  }
+
+  @UseGuards(AtGuard)
+  @Post('change-password')
+  async changePassword(
+    @GetCurrentUser('id') userId: number,
+    @Body() dto: ChangePasswordDto,
+  ): Promise<Boolean> {
+    return this.authService.changePassword(userId, dto);
   }
 
   @UseGuards(RtGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  refreshTokens(
+  async refreshTokens(
     @GetCurrentUser('id') userId: number,
     @GetCurrentUser('refreshToken') refreshToken: string,
   ): Promise<Tokens> {
