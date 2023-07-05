@@ -4,6 +4,7 @@ import usersDB from '../data/users.json';
 import genresDB from '../data/genres.json';
 import moviesDB from '../data/movies.json';
 import ratingsDB from '../data/ratings.json';
+import keywordsDB from '../data/keywords.json';
 
 const prisma = new PrismaClient();
 
@@ -20,8 +21,6 @@ const getUsers = async () => {
   const users = await Promise.all(
     usersDB.map(async (user) => {
       const reviews = getUserRatings(user.id);
-
-      delete user.id;
 
       return {
         ...user,
@@ -57,8 +56,8 @@ const getMovies = () => {
   const movies = moviesDB.map((movie) => {
     const movieGenres = movie.genres;
     const date = movie.release_date.split('-');
+    const keywords = keywordsDB.find((item) => item.movieId === movie.id);
 
-    delete movie.id;
     delete movie.genres;
     delete movie.backdrop_path;
 
@@ -82,6 +81,9 @@ const getMovies = () => {
           genre: { connect: { id: item.id } },
         })),
       },
+      keywords: {
+        create: { words: keywords.keywords },
+      },
     };
   });
 
@@ -97,21 +99,37 @@ async function main() {
   const genres = getGenres();
   const movies = getMovies();
 
-  await prisma.genre
-    .createMany({ data: genres })
-    .then(() => console.log('Genres seed success.'));
+  await prisma.genre.createMany({ data: genres });
 
-  await Promise.all(
-    movies.map(async (movie) => {
-      await prisma.movie.create({ data: movie });
-    }),
-  ).then(() => console.log('Movies seed success.'));
+  await prisma.movie.createMany({
+    data: movies.map((movie) => {
+      const { id, genres, keywords, ...rest } = movie;
 
-  await Promise.all(
-    users.map(async (user) => {
-      await prisma.user.create({ data: user });
+      return { ...rest };
     }),
-  ).then(() => console.log('Users seed success.'));
+  });
+
+  movies.forEach(async (movie) => {
+    await prisma.movie.update({
+      where: { id: movie.id },
+      data: { genres: movie.genres, keywords: movie.keywords },
+    });
+  });
+
+  await prisma.user.createMany({
+    data: users.map((user) => {
+      const { id, reviews, ...rest } = user;
+
+      return { ...rest };
+    }),
+  });
+
+  users.forEach(async (user) => {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { reviews: user.reviews },
+    });
+  });
 }
 
 main()
