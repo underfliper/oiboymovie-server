@@ -1,10 +1,21 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 
-import { User } from '@prisma/client';
+import { Review, User } from '@prisma/client';
 import { AtGuard } from '../common/guards';
 import { GetCurrentUser } from '../common/decorators';
 import { UserService } from './user.service';
-import { EditUserDto } from './dto';
+import { AddReviewDto, EditUserDto, UserReviewsDto } from './dto';
+import { PaginationDto } from 'src/pagination/dto';
 
 @UseGuards(AtGuard)
 @Controller('user')
@@ -22,5 +33,22 @@ export class UserController {
     @Body() dto: EditUserDto,
   ): Promise<User> {
     return this.userService.updateProfile(userId, dto);
+  }
+
+  @Get('reviews')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getUserReviewedMovies(
+    @GetCurrentUser('id') userId: number,
+    @Query() query: PaginationDto,
+  ): Promise<UserReviewsDto> {
+    return this.userService.getUserReviewedMovies(userId, query);
+  }
+
+  @Post('add-review')
+  async addReview(
+    @GetCurrentUser('id') userId: number,
+    @Body() dto: AddReviewDto,
+  ): Promise<Review> {
+    return this.userService.addReview(userId, dto);
   }
 }

@@ -1,12 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-
-import { User } from '@prisma/client';
+import { Review, User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { EditUserDto } from './dto';
+import { PaginationService } from 'src/pagination/pagination.service';
+import { plainToInstance } from 'class-transformer';
+
+import { EditUserDto, UserReviewsDto } from './dto';
+import { PaginationDto } from 'src/pagination/dto';
+import { AddReviewDto } from './dto';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private paginationService: PaginationService,
+  ) {}
 
   async getProfile(userId: number): Promise<User> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -42,5 +49,47 @@ export class UserService {
     delete user.refreshToken;
 
     return user;
+  }
+
+  async getUserReviewedMovies(
+    userId: number,
+    query: PaginationDto,
+  ): Promise<UserReviewsDto> {
+    const { perPage, skip } = this.paginationService.getPagination(query);
+
+    const reviews = await this.prisma.review.findMany({
+      where: { userId: userId },
+      include: { movie: true },
+      orderBy: { publishDate: 'desc' },
+      skip,
+      take: perPage,
+    });
+
+    return plainToInstance(UserReviewsDto, {
+      reviews: reviews,
+      length: await this.prisma.review.count({ where: { userId: userId } }),
+    });
+  }
+
+  async addReview(userId: number, dto: AddReviewDto): Promise<Review> {
+    const review = await this.prisma.review.create({
+      data: {
+        rating: dto.rating,
+        text: dto.text,
+        publishDate: new Date(),
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
+        movie: {
+          connect: {
+            id: dto.movieId,
+          },
+        },
+      },
+    });
+
+    return review;
   }
 }
