@@ -51,6 +51,7 @@ model Movie {
   vote_count           Int
   genres               MoviesOnGenres[]
   reviews              Review[]
+  keywords             Keyword?
 
   @@map("movies")
 }
@@ -84,4 +85,12 @@ model Review {
 
   @@id([userId, movieId])
   @@map("reviews")
+}
+
+model Keyword {
+  movie   Movie   @relation(fields: [movieId], references: [id])
+  movieId Int     @id @unique
+  words   String?
+
+  @@map("keywords")
 }
