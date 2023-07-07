@@ -50,4 +50,9 @@ export class MovieController {
   async getById(@Param('id') movieId: string): Promise<MovieDto> {
     return this.movieService.getById(+movieId);
   }
+
+  @Get(':id/similar')
+  async getSimilar(@Param('id') movieId: string): Promise<MovieShortDto[]> {
+    return this.movieService.getSimilarMovies(+movieId);
+  }
 }

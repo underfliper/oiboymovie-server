@@ -2,7 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PaginationService } from 'src/pagination/pagination.service';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
+
 import {
   EnumMovieSort,
   GetAllMoviesQueryDto,
@@ -19,6 +22,8 @@ export class MovieService {
   constructor(
     private prisma: PrismaService,
     private paginationService: PaginationService,
+    private readonly httpService: HttpService,
+    private config: ConfigService,
   ) {}
 
   async getAll(query: GetAllMoviesQueryDto): Promise<GetAllMoviesResponseDto> {
@@ -123,5 +128,19 @@ export class MovieService {
       reviews: plainToInstance(ReviewDto, reviews),
       length: await this.prisma.review.count({ where: { movieId: movieId } }),
     };
+  }
+
+  async getSimilarMovies(movieId: number): Promise<MovieShortDto[]> {
+    const { data } = await this.httpService.axiosRef.get<number[]>(
+      `${this.config.get<string>(
+        'RECOMMENDATIONS_BASE_URL',
+      )}/by-movie/${movieId}`,
+    );
+
+    const movies = await this.prisma.movie.findMany({
+      where: { id: { in: data } },
+    });
+
+    return plainToInstance(MovieShortDto, movies);
   }
 }
