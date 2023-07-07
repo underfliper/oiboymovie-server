@@ -16,6 +16,7 @@ import { GetCurrentUser } from '../common/decorators';
 import { UserService } from './user.service';
 import { AddReviewDto, EditUserDto, UserReviewsDto } from './dto';
 import { PaginationDto } from 'src/pagination/dto';
+import { MovieShortDto } from 'src/movie/dto';
 
 @UseGuards(AtGuard)
 @Controller('user')
@@ -50,5 +51,12 @@ export class UserController {
     @Body() dto: AddReviewDto,
   ): Promise<Review> {
     return this.userService.addReview(userId, dto);
+  }
+
+  @Get('recommended-movies')
+  async getRecommendedMovies(
+    @GetCurrentUser('id') userId: number,
+  ): Promise<MovieShortDto[]> {
+    return this.userService.getRecommendedMovies(userId);
   }
 }

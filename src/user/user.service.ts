@@ -7,12 +7,17 @@ import { plainToInstance } from 'class-transformer';
 import { EditUserDto, UserReviewsDto } from './dto';
 import { PaginationDto } from 'src/pagination/dto';
 import { AddReviewDto } from './dto';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import { MovieShortDto } from 'src/movie/dto';
 
 @Injectable()
 export class UserService {
   constructor(
     private prisma: PrismaService,
     private paginationService: PaginationService,
+    private readonly httpService: HttpService,
+    private config: ConfigService,
   ) {}
 
   async getProfile(userId: number): Promise<User> {
@@ -91,5 +96,19 @@ export class UserService {
     });
 
     return review;
+  }
+
+  async getRecommendedMovies(userId: number): Promise<MovieShortDto[]> {
+    const { data } = await this.httpService.axiosRef.get<number[]>(
+      `${this.config.get<string>(
+        'RECOMMENDATIONS_BASE_URL',
+      )}/by-user/${userId}`,
+    );
+
+    const movies = await this.prisma.movie.findMany({
+      where: { id: { in: data } },
+    });
+
+    return plainToInstance(MovieShortDto, movies);
   }
 }
