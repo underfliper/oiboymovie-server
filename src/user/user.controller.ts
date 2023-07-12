@@ -10,13 +10,14 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 
-import { Review, User } from '@prisma/client';
+import { Review } from '@prisma/client';
 import { AtGuard } from '../common/guards';
 import { GetCurrentUser } from '../common/decorators';
 import { UserService } from './user.service';
 import { AddReviewDto, EditUserDto, UserReviewsDto } from './dto';
 import { PaginationDto } from 'src/pagination/dto';
 import { MovieShortDto } from 'src/movie/dto';
+import { UserDto } from './dto/user.dto';
 
 @UseGuards(AtGuard)
 @Controller('user')
@@ -24,7 +25,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('profile')
-  getProfile(@GetCurrentUser('id') userId: number): Promise<User> {
+  getProfile(@GetCurrentUser('id') userId: number): Promise<UserDto> {
     return this.userService.getProfile(userId);
   }
 
@@ -32,7 +33,7 @@ export class UserController {
   updateProfile(
     @GetCurrentUser('id') userId: number,
     @Body() dto: EditUserDto,
-  ): Promise<User> {
+  ): Promise<UserDto> {
     return this.userService.updateProfile(userId, dto);
   }
 

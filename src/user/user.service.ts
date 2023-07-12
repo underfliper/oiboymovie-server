@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Review, User } from '@prisma/client';
+import { Review } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationService } from 'src/pagination/pagination.service';
 import { plainToInstance } from 'class-transformer';
@@ -10,6 +10,7 @@ import { AddReviewDto } from './dto';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { MovieShortDto } from 'src/movie/dto';
+import { UserDto } from './dto/user.dto';
 
 @Injectable()
 export class UserService {
@@ -20,26 +21,22 @@ export class UserService {
     private config: ConfigService,
   ) {}
 
-  async getProfile(userId: number): Promise<User> {
+  async getProfile(userId: number): Promise<UserDto> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
     if (user) {
-      delete user.password;
-      return user;
+      return plainToInstance(UserDto, user);
     }
+
     throw new NotFoundException('User not found.');
   }
 
-  async updateProfile(userId: number, dto: EditUserDto): Promise<User> {
-    console.log(dto.email);
-
+  async updateProfile(userId: number, dto: EditUserDto): Promise<UserDto> {
     const isSameUser = dto.email
       ? await this.prisma.user.findFirst({
           where: { email: dto.email },
         })
       : null;
-
-    console.log(isSameUser);
 
     if (isSameUser && String(userId) !== String(isSameUser.id)) {
       throw new NotFoundException('Email busy.');
@@ -50,10 +47,7 @@ export class UserService {
       data: { ...dto },
     });
 
-    delete user.password;
-    delete user.refreshToken;
-
-    return user;
+    return plainToInstance(UserDto, user);
   }
 
   async getUserReviewedMovies(
