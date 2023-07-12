@@ -8,8 +8,4 @@ export class ChangePasswordDto {
   @IsNotEmpty()
   @IsString()
   new: string;
-
-  @IsNotEmpty()
-  @IsString()
-  confirm: string;
 }

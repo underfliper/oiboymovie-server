@@ -81,9 +81,6 @@ export class AuthService {
     userId: number,
     dto: ChangePasswordDto,
   ): Promise<boolean> {
-    if (dto.new !== dto.confirm)
-      throw new ForbiddenException('Passwords don`t match.');
-
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new ForbiddenException('Access Denied');
 
