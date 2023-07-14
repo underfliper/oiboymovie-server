@@ -18,5 +18,8 @@ export class MovieShortDto {
   title: string;
 
   @Expose()
+  overview: string;
+
+  @Expose()
   vote_average: number;
 }
