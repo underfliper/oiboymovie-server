@@ -26,7 +26,7 @@ export class MovieService {
     private config: ConfigService,
   ) {}
 
-  async getAll(query: GetAllMoviesQueryDto): Promise<GetAllMoviesResponseDto> {
+  async find(query: GetAllMoviesQueryDto): Promise<GetAllMoviesResponseDto> {
     console.log(query);
 
     const { sort, searchTerm, genreId } = query;
@@ -77,6 +77,12 @@ export class MovieService {
       movies: movies,
       length: await this.prisma.movie.count({ where: prismaFilter }),
     });
+  }
+
+  async getAllMovies(): Promise<MovieShortDto[]> {
+    const movies = await this.prisma.movie.findMany();
+
+    return plainToInstance(MovieShortDto, movies);
   }
 
   async getById(movieId: number): Promise<MovieDto> {

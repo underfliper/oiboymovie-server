@@ -22,10 +22,15 @@ export class MovieController {
 
   @Get()
   @UsePipes(new ValidationPipe({ transform: true }))
-  async getAll(
+  async find(
     @Query() query: GetAllMoviesQueryDto,
   ): Promise<GetAllMoviesResponseDto> {
-    return this.movieService.getAll(query);
+    return this.movieService.find(query);
+  }
+
+  @Get('all')
+  async getAllMovies(): Promise<MovieShortDto[]> {
+    return this.movieService.getAllMovies();
   }
 
   @Get('hot')
